@@ -1,0 +1,16 @@
+{
+  "title": "NEW GAME",
+  "subtitle": "PRESS START",
+  "title_font_size": 48,
+  "subtitle_font_size": 18,
+  "background_color": [
+    18,
+    16,
+    28
+  ],
+  "platform_tile_count": 9,
+  "left_tree_index": 0,
+  "right_tree_index": 2,
+  "sign_decor_index": 1,
+  "blink_rate": 60
+}

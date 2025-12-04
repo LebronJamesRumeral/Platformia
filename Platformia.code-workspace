@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Platformia",
+			"path": "."
+		},
+		{
+			"name": "data",
+			"path": "../../../Downloads/00_resources/data"
+		}
+	],
+	"settings": {}
+}
