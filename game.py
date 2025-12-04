@@ -53,6 +53,7 @@ class Game:
             
             'pause_resume': load_image('resume.png'),
             'pause_quit': load_image('quit.png'),
+            'pause': load_image('pause.png'),
         }
 
         self.sfx = {
@@ -451,62 +452,57 @@ class Game:
 
     def draw_pause_menu(self):
         """Draw the pause menu overlay with resume and quit buttons"""
-        
-        game_state_surface = self.display.copy()
-        
-        
+
         overlay = pygame.Surface(self.display.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         self.display.blit(overlay, (0, 0))
+
+        pause_img = self.assets['pause']          
+        resume_img = self.assets['pause_resume']  
+        quit_img = self.assets['pause_quit']      
+        target_pause_width = 180  
+        target_pause_height = 50  
+        pause_img = pygame.transform.smoothscale(pause_img, (target_pause_width, target_pause_height))
         
+        target_button_width = 140  
+        target_button_height = 50  
+        resume_img = pygame.transform.smoothscale(resume_img, (target_button_width, target_button_height))
+        quit_img = pygame.transform.smoothscale(quit_img, (target_button_width, target_button_height))
         
-        resume_img = self.assets['pause_resume']
-        quit_img = self.assets['pause_quit']
-        
-        
-        target_width, target_height = 120, 40
-        resume_img = pygame.transform.smoothscale(resume_img, (target_width, target_height))
-        quit_img = pygame.transform.smoothscale(quit_img, (target_width, target_height))
-        
-        
-        resume_rect = resume_img.get_rect(center=(160, 120))
-        quit_rect = quit_img.get_rect(center=(160, 170))
+        pause_rect = pause_img.get_rect(center=(160, 70))      
+        resume_rect = resume_img.get_rect(center=(160, 130))   
+        quit_rect = quit_img.get_rect(center=(160, 190))       
         
         
         mouse = pygame.mouse.get_pos()
         mx = mouse[0] * (320 / self.screen.get_width())
         my = mouse[1] * (240 / self.screen.get_height())
-        
-        
-        is_resume_hovered = resume_rect.collidepoint(mx, my)
-        is_quit_hovered = quit_rect.collidepoint(mx, my)
-        
-        
-        font = pygame.font.Font(None, 48)
-        paused_text = font.render("PAUSED", True, (255, 255, 255))
-        text_rect = paused_text.get_rect(center=(160, 60))
-        self.display.blit(paused_text, text_rect)
-        
-        
-        resume_original = resume_img.copy()
-        quit_original = quit_img.copy()
-        
-        
-        if is_resume_hovered:
-            resume_img = pygame.transform.scale(resume_original, 
-                                            (int(target_width * 1.1), int(target_height * 1.1)))
-            resume_rect = resume_img.get_rect(center=(160, 120))
-        
-        if is_quit_hovered:
-            quit_img = pygame.transform.scale(quit_original, 
-                                            (int(target_width * 1.1), int(target_height * 1.1)))
-            quit_rect = quit_img.get_rect(center=(160, 170))
-        
-        
+         
+        self.display.blit(pause_img, pause_rect)
         self.display.blit(resume_img, resume_rect)
         self.display.blit(quit_img, quit_rect)
         
+        is_resume_hover = resume_rect.collidepoint(mx, my)
+        is_quit_hover = quit_rect.collidepoint(mx, my)
         
+        if is_resume_hover:
+            hover_resume = pygame.transform.scale(resume_img, 
+                                                (int(target_button_width * 1.1), 
+                                                int(target_button_height * 1.1)))
+            hover_rect = hover_resume.get_rect(center=(160, 130))
+            self.display.blit(hover_resume, hover_rect)
+            resume_rect = hover_rect  
+        
+        if is_quit_hover:
+            hover_quit = pygame.transform.scale(quit_img, 
+                                            (int(target_button_width * 1.1), 
+                                            int(target_button_height * 1.1)))
+            hover_rect = hover_quit.get_rect(center=(160, 190))
+            self.display.blit(hover_quit, hover_rect)
+            quit_rect = hover_rect  
+        
+        
+        mouse_clicked = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -515,25 +511,18 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.menu_open = False
-                    
-                    self.display.blit(game_state_surface, (0, 0))
                     return
-                elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
-                    
-                    self.menu_open = False
-                    self.display.blit(game_state_surface, (0, 0))
-                    return
-            
             
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if is_resume_hovered:  
-                    self.menu_open = False
-                    
-                    self.display.blit(game_state_surface, (0, 0))
-                    return
-                if is_quit_hovered:
-                    pygame.quit()
-                    sys.exit()
+                mouse_clicked = True
+             
+        if mouse_clicked:
+            if resume_rect.collidepoint(mx, my):
+                self.menu_open = False
+                return
+            if quit_rect.collidepoint(mx, my):
+                pygame.quit()
+                sys.exit()
 
     def _draw_hearts(self):
         """Draws the heart HUD with a soft gray background panel."""
@@ -557,6 +546,72 @@ class Game:
                 self.display.blit(self.heart_full, (x + i * (heart_w + spacing), y))
             else:
                 self.display.blit(self.heart_empty, (x + i * (heart_w + spacing), y))
+
+    def _draw_level_indicator(self):
+        """Draws the current level indicator with a flag/star icon in upper right corner."""
+        level_num = self.level + 1  # Convert from 0-based to 1-based
+        
+        # Create background panel
+        font = pygame.font.Font(None, 22)
+        level_text = f"LEVEL {level_num}"
+        
+        # Render text
+        text_surface = font.render(level_text, True, (255, 255, 255))
+        shadow_surface = font.render(level_text, True, (0, 0, 0))
+        
+        # Calculate position
+        padding = 8
+        text_width = text_surface.get_width()
+        text_height = text_surface.get_height()
+        
+        # Position in upper right
+        x_pos = self.display.get_width() - text_width - padding - 4
+        y_pos = padding
+        
+        # Create decorative background
+        bg_width = text_width + 20  # Extra space for icon
+        bg_height = text_height + 8
+        bg_rect = pygame.Rect(x_pos - 10, y_pos - 4, bg_width, bg_height)
+        
+        # Draw background with gradient effect
+        bg_surf = pygame.Surface((bg_width, bg_height), pygame.SRCALPHA)
+        
+        # Draw gradient background
+        for i in range(bg_height):
+            alpha = 120 + (i * 20 // bg_height)
+            pygame.draw.line(bg_surf, (60, 60, 80, alpha), 
+                            (0, i), (bg_width, i))
+        
+        # Draw border
+        pygame.draw.rect(bg_surf, (100, 100, 120, 200), bg_surf.get_rect(), 2, border_radius=6)
+        
+        # Draw level number circle/icon on the RIGHT side (after text)
+        icon_radius = bg_height // 2 - 2
+        icon_center = (bg_width - icon_radius - 2, bg_height // 2)  # Right side
+        
+        # Draw icon background
+        pygame.draw.circle(bg_surf, (80, 120, 200, 200), icon_center, icon_radius)
+        pygame.draw.circle(bg_surf, (40, 80, 160, 255), icon_center, icon_radius, 2)
+        
+        # Draw level number in icon
+        icon_font = pygame.font.Font(None, 16)
+        icon_text = icon_font.render(str(level_num), True, (255, 255, 255))
+        icon_rect = icon_text.get_rect(center=icon_center)
+        bg_surf.blit(icon_text, icon_rect)
+        
+        # Blit background
+        self.display.blit(bg_surf, (bg_rect.x, bg_rect.y))
+        
+        # Draw "LEVEL" text on the LEFT side (before the icon)
+        # We need to draw just the word "LEVEL" and then the number in the circle
+        level_word = "LEVEL"
+        level_word_surface = font.render(level_word, True, (255, 255, 255))
+        level_word_shadow = font.render(level_word, True, (0, 0, 0))
+        
+        # Position the "LEVEL" text on the left side of the background
+        text_x = x_pos
+        self.display.blit(level_word_shadow, (text_x + 1, y_pos + 1))
+        self.display.blit(level_word_surface, (text_x, y_pos))
 
     def run(self):
         
@@ -717,6 +772,9 @@ class Game:
 
             
             self._draw_hearts()
+            
+            # Draw level indicator in upper right corner
+            self._draw_level_indicator()
 
             self.display_2.blit(self.display, (0, 0))
             screenshake_offset = (
