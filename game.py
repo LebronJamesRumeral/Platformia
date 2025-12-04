@@ -24,6 +24,10 @@ class Game:
 
         self.clock = pygame.time.Clock()
         self.movement = [False, False]
+        
+        
+        self.menu_open = False   
+        self.menu_selected = 0   
 
         self.assets = {
             'decor': load_images('tiles/decor'),
@@ -46,6 +50,9 @@ class Game:
             'particles/particle': Animation(load_images('particles/particle'), img_dur=6, loop=False),
             'gun': load_image('gun.png'),
             'projectile': load_image('projectile.png'),
+            
+            'pause_resume': load_image('resume.png'),
+            'pause_quit': load_image('quit.png'),
         }
 
         self.sfx = {
@@ -70,7 +77,7 @@ class Game:
 
         self.tilemap = Tilemap(self, tile_size=16)
 
-        # Enhanced heart images
+        
         self.heart_full, self.heart_empty = self._create_heart_images(size=14)
 
         self.level = 0
@@ -85,7 +92,7 @@ class Game:
         center = size // 2
         radius = size // 4
 
-        # --- Full Heart (shiny red) ---
+        
         color = (230, 50, 50)
         highlight = (255, 120, 120)
         dark = (180, 0, 0)
@@ -98,7 +105,7 @@ class Game:
             (center + radius + 1, center - radius // 2),
             (center, size - 1)
         ])
-        # small highlight
+        
         pygame.draw.circle(surf_full, highlight, (c1[0]-1, c1[1]-1), radius//3)
         pygame.draw.circle(surf_full, highlight, (c2[0]-1, c2[1]-1), radius//3)
         pygame.draw.polygon(surf_full, dark, [
@@ -107,7 +114,7 @@ class Game:
             (center, size - 1)
         ], 1)
 
-        # --- Empty Heart (gray outline) ---
+        
         outline = (100, 100, 100)
         pygame.draw.circle(surf_empty, outline, c1, radius, 2)
         pygame.draw.circle(surf_empty, outline, c2, radius, 2)
@@ -144,15 +151,15 @@ class Game:
         self.transition = -30
 
     def show_game_over(self):
-        # Use image for header if available, keep a small restart text rendered
-        # Create pixelated font for restart prompt
+        
+        
         font_large = pygame.font.Font(None, 48)
         restart_text_large = font_large.render('PRESS R TO RESTART', True, (255, 255, 255))
         restart_text = pygame.transform.scale(restart_text_large,
                                             (restart_text_large.get_width() // 2,
                                             restart_text_large.get_height() // 2))
         
-        # Create shadow for pixelated effect
+        
         shadow_large = font_large.render('PRESS R TO RESTART', True, (0, 0, 0))
         shadow_text = pygame.transform.scale(shadow_large,
                                             (shadow_large.get_width() // 2,
@@ -179,29 +186,29 @@ class Game:
             self.display.fill((0, 0, 0, 0))
             self.display.blit(overlay, (0, 0))
 
-            # blit image centered (if available) otherwise fall back to text
+            
             if game_over_img:
                 gw, gh = game_over_img.get_size()
                 gx = self.display.get_width() // 2 - gw // 2
                 gy = self.display.get_height() // 2 - gh // 2 - 16
                 self.display.blit(game_over_img, (gx, gy))
             else:
-                # fallback text centered
+                
                 font = pygame.font.Font(None, 72)
                 game_over_text = font.render("GAME OVER", True, (255, 0, 0))
                 self.display.blit(game_over_text,
                                 (self.display.get_width() // 2 - game_over_text.get_width() // 2,
                                 self.display.get_height() // 2 - 60))
 
-            # Blinking restart prompt at top center with pixelated shadow
+            
             visible = (pygame.time.get_ticks() // 500) % 2 == 0
             if visible:
                 dw, dh = self.display.get_size()
                 px = (dw - restart_text.get_width()) // 2
                 py = 180
-                # Draw shadow first
+                
                 self.display.blit(shadow_text, (px + 1, py + 1))
-                # Draw main text
+                
                 self.display.blit(restart_text, (px, py))
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
@@ -209,15 +216,15 @@ class Game:
             self.clock.tick(60)
     
     def show_congratulations(self):
-        # Use image for header if available, keep a small restart text rendered
-        # Create pixelated font for restart prompt
+        
+        
         font_large = pygame.font.Font(None, 48)
         restart_text_large = font_large.render('PRESS R TO PLAY AGAIN', True, (255, 255, 255))
         restart_text = pygame.transform.scale(restart_text_large,
                                             (restart_text_large.get_width() // 2,
                                             restart_text_large.get_height() // 2))
         
-        # Create shadow for pixelated effect
+        
         shadow_large = font_large.render('PRESS R TO PLAY AGAIN', True, (0, 0, 0))
         shadow_text = pygame.transform.scale(shadow_large,
                                             (shadow_large.get_width() // 2,
@@ -237,7 +244,7 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
                         waiting = False
-                        self.level = 0  # restart from first level
+                        self.level = 0  
                         self.load_level(self.level)
 
             overlay = pygame.Surface(self.display.get_size(), pygame.SRCALPHA)
@@ -245,7 +252,7 @@ class Game:
             self.display.fill((0, 0, 0, 0))
             self.display.blit(overlay, (0, 0))
 
-            # blit image centered (if available) otherwise fall back to text
+            
             if you_win_img:
                 iw, ih = you_win_img.get_size()
                 ix = self.display.get_width() // 2 - iw // 2
@@ -258,15 +265,15 @@ class Game:
                                 (self.display.get_width() // 2 - congrats_text.get_width() // 2,
                                 self.display.get_height() // 2 - 60))
 
-            # Blinking restart prompt at top center with pixelated shadow
+            
             visible = (pygame.time.get_ticks() // 500) % 2 == 0
             if visible:
                 dw, dh = self.display.get_size()
                 px = (dw - restart_text.get_width()) // 2
                 py = 150
-                # Draw shadow first
+                
                 self.display.blit(shadow_text, (px + 1, py + 1))
-                # Draw main text
+                
                 self.display.blit(restart_text, (px, py))
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
@@ -277,21 +284,21 @@ class Game:
     def show_title(self):
         """Display the title image (no text). Wait for any key or mouse press to continue."""
         try:
-            # Load via existing helper so path resolves to data/images/title.jpg
+            
             title_img = self.assets.get('title') or load_image('title-menu.png')
         except Exception:
             title_img = None
 
-        # Prepare text for blinking prompt with pixel-art style
-        # Use a larger font and scale down with nearest-neighbor for pixelated look
+        
+        
         font_large = pygame.font.Font(None, 48)
         prompt_text_large = font_large.render('PRESS ENTER', True, (255, 255, 255))
-        # Scale down to create pixelated effect (nearest-neighbor)
+        
         prompt_text = pygame.transform.scale(prompt_text_large, 
                                               (prompt_text_large.get_width() // 2, 
                                                prompt_text_large.get_height() // 2))
 
-        # If title image exists, scale and center it, otherwise just show black
+        
         if title_img:
             self.assets['title'] = title_img
             iw, ih = title_img.get_size()
@@ -305,7 +312,7 @@ class Game:
             img_scaled = None
             img_x = img_y = 0
 
-        # Prepare player idle animation to render on the title screen (if available)
+        
         idle_anim = None
         try:
             if isinstance(self.assets.get('player/idle'), Animation):
@@ -315,11 +322,11 @@ class Game:
         except Exception:
             idle_anim = None
 
-        # Default player placement (centered on title image; you can adjust later)
+        
         dw, dh = self.display.get_size()
         if img_scaled:
             player_center_x = img_x + (new_size[0] // 2)
-            # place the player above the bottom of the title image
+            
             player_center_y = img_y + new_size[1] - 127
         else:
             player_center_x = dw // 2
@@ -331,21 +338,21 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                # Only proceed on Enter (ignore mouse clicks and other keys)
+                
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                        # start title-enter animation (player jump) then exit title
+                        
                         play_jump = True
                         waiting = False
 
-            # Clear
+            
             self.display.fill((0, 0, 0))
 
-            # Draw title image if available
+            
             if img_scaled:
                 self.display.blit(img_scaled, (img_x, img_y))
 
-            # Update and draw player idle animation
+            
             if idle_anim:
                 idle_anim.update()
                 try:
@@ -354,16 +361,16 @@ class Game:
                     fy = player_center_y - frame_img.get_height() // 2
                     self.display.blit(frame_img, (fx, fy))
                 except Exception:
-                    # ignore rendering errors for safety
+                    
                     pass
 
-            # Blinking prompt at top center with pixelated shadow
+            
             visible = (pygame.time.get_ticks() // 500) % 2 == 0
             if visible:
                 dw, dh = self.display.get_size()
                 px = (dw - prompt_text.get_width()) // 2
                 py = 30
-                # Create shadow with pixelated effect
+                
                 shadow_large = font_large.render('PRESS ENTER', True, (0, 0, 0))
                 shadow_text = pygame.transform.scale(shadow_large, 
                                                       (shadow_large.get_width() // 2, 
@@ -371,14 +378,14 @@ class Game:
                 self.display.blit(shadow_text, (px + 1, py + 1))
                 self.display.blit(prompt_text, (px, py))
 
-            # present to the real screen
+            
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
             self.clock.tick(60)
 
-        # If Enter was pressed, play a short jump animation before returning
+        
         if 'play_jump' in locals() and play_jump:
-            # try to use the jump animation if available
+            
             try:
                 jump_anim = None
                 if isinstance(self.assets.get('player/jump'), Animation):
@@ -390,11 +397,11 @@ class Game:
             except Exception:
                 jump_anim = None
 
-            # animation parameters
+            
             total_frames = 30
             jump_height = 28
 
-            # play sfx if available
+            
             try:
                 if 'jump' in self.sfx:
                     self.sfx['jump'].play()
@@ -407,7 +414,7 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-                # update animation frame
+                
                 if jump_anim:
                     jump_anim.update()
                     try:
@@ -418,32 +425,115 @@ class Game:
                     frame_img = None
 
                 u = t / float(max(1, total_frames - 1))
-                # simple arc: sin curve for smooth jump
+                
                 y_off = -int(math.sin(u * math.pi) * jump_height)
 
-                # redraw background/title
+                
                 self.display.fill((0, 0, 0))
                 if img_scaled:
                     self.display.blit(img_scaled, (img_x, img_y))
 
-                # draw player frame at offset
+                
                 if frame_img:
                     fx = player_center_x - frame_img.get_width() // 2
                     fy = player_center_y - frame_img.get_height() // 2 + y_off
                     self.display.blit(frame_img, (fx, fy))
 
-                # present
+                
                 self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
                 pygame.display.update()
                 self.clock.tick(60)
 
-            # small delay after animation
+            
             pygame.time.delay(120)
 
-        # end of title screen; control returns to run()
+        
 
-
-
+    def draw_pause_menu(self):
+        """Draw the pause menu overlay with resume and quit buttons"""
+        
+        game_state_surface = self.display.copy()
+        
+        
+        overlay = pygame.Surface(self.display.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        self.display.blit(overlay, (0, 0))
+        
+        
+        resume_img = self.assets['pause_resume']
+        quit_img = self.assets['pause_quit']
+        
+        
+        target_width, target_height = 120, 40
+        resume_img = pygame.transform.smoothscale(resume_img, (target_width, target_height))
+        quit_img = pygame.transform.smoothscale(quit_img, (target_width, target_height))
+        
+        
+        resume_rect = resume_img.get_rect(center=(160, 120))
+        quit_rect = quit_img.get_rect(center=(160, 170))
+        
+        
+        mouse = pygame.mouse.get_pos()
+        mx = mouse[0] * (320 / self.screen.get_width())
+        my = mouse[1] * (240 / self.screen.get_height())
+        
+        
+        is_resume_hovered = resume_rect.collidepoint(mx, my)
+        is_quit_hovered = quit_rect.collidepoint(mx, my)
+        
+        
+        font = pygame.font.Font(None, 48)
+        paused_text = font.render("PAUSED", True, (255, 255, 255))
+        text_rect = paused_text.get_rect(center=(160, 60))
+        self.display.blit(paused_text, text_rect)
+        
+        
+        resume_original = resume_img.copy()
+        quit_original = quit_img.copy()
+        
+        
+        if is_resume_hovered:
+            resume_img = pygame.transform.scale(resume_original, 
+                                            (int(target_width * 1.1), int(target_height * 1.1)))
+            resume_rect = resume_img.get_rect(center=(160, 120))
+        
+        if is_quit_hovered:
+            quit_img = pygame.transform.scale(quit_original, 
+                                            (int(target_width * 1.1), int(target_height * 1.1)))
+            quit_rect = quit_img.get_rect(center=(160, 170))
+        
+        
+        self.display.blit(resume_img, resume_rect)
+        self.display.blit(quit_img, quit_rect)
+        
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.menu_open = False
+                    
+                    self.display.blit(game_state_surface, (0, 0))
+                    return
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    
+                    self.menu_open = False
+                    self.display.blit(game_state_surface, (0, 0))
+                    return
+            
+            
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if is_resume_hovered:  
+                    self.menu_open = False
+                    
+                    self.display.blit(game_state_surface, (0, 0))
+                    return
+                if is_quit_hovered:
+                    pygame.quit()
+                    sys.exit()
 
     def _draw_hearts(self):
         """Draws the heart HUD with a soft gray background panel."""
@@ -453,13 +543,13 @@ class Game:
         total_width = (heart_w + spacing) * self.player.max_health - spacing
         bg_rect = pygame.Rect(4, 4, total_width + 8, heart_h + 8)
 
-        # Slightly transparent gray background
+        
         bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
         bg_surf.fill((40, 40, 40, 160))
         pygame.draw.rect(bg_surf, (80, 80, 80, 180), bg_surf.get_rect(), 1, border_radius=4)
         self.display.blit(bg_surf, (bg_rect.x, bg_rect.y))
 
-        # Draw hearts on top
+        
         x = bg_rect.x + 4
         y = bg_rect.y + 4
         for i in range(self.player.max_health):
@@ -469,11 +559,11 @@ class Game:
                 self.display.blit(self.heart_empty, (x + i * (heart_w + spacing), y))
 
     def run(self):
-        # show title image on start (waits for key/mouse press)
+        
         try:
             self.show_title()
         except Exception:
-            # Fail silently if title cannot be shown
+            
             pass
 
         pygame.mixer.music.load('data/music.wav')
@@ -486,12 +576,21 @@ class Game:
             self.display_2.blit(self.assets['background'], (0, 0))
             self.screenshake = max(0, self.screenshake - 1)
 
+            if self.menu_open:
+                self.draw_pause_menu()
+                self.display_2.blit(self.display, (0, 0))
+                self.screen.blit(pygame.transform.scale(self.display_2, self.screen.get_size()), (0, 0))
+                pygame.display.update()
+                self.clock.tick(60)
+                
+                continue
+
             if not len(self.enemies):
                 self.transition += 1
                 if self.transition > 30:
                     total_levels = len(os.listdir('data/maps'))
                     if self.level + 1 >= total_levels:
-                        self.show_congratulations()  # All levels completed
+                        self.show_congratulations()  
                     else:
                         self.level += 1
                         self.load_level(self.level)
@@ -587,7 +686,11 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
+
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:        
+                        self.menu_open = not self.menu_open
+                        self.menu_selected = 0
                     if event.key == pygame.K_a:
                         self.movement[0] = True
                     if event.key == pygame.K_d:
@@ -612,7 +715,7 @@ class Game:
                 transition_surf.set_colorkey((255, 255, 255))
                 self.display.blit(transition_surf, (0, 0))
 
-            # Draw hearts with background
+            
             self._draw_hearts()
 
             self.display_2.blit(self.display, (0, 0))
